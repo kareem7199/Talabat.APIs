@@ -33,6 +33,8 @@ namespace Talabat.APIs
 			builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 			builder.Services.AddAutoMapper(typeof(MappingProfile));
 
+			builder.Services.AddScoped<ExceptionMiddleware>();
+
 			builder.Services.Configure<ApiBehaviorOptions>(options =>
 			{
 				options.InvalidModelStateResponseFactory = (actionContext) =>
@@ -82,6 +84,8 @@ namespace Talabat.APIs
 				app.UseSwagger();
 				app.UseSwaggerUI();
 			}
+
+			app.UseStatusCodePagesWithReExecute("/Errors/{0}");
 
 			app.UseHttpsRedirection();
 
