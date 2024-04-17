@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Talabat.APIs.Errors;
 using Talabat.APIs.Helpers;
+using Talabat.APIs.Middlewares;
 using Talabat.Core.Repositories.Contract;
 using Talabat.Repository;
 using Talabat.Repository.Data;
@@ -42,7 +43,7 @@ namespace Talabat.APIs
 												   .SelectMany(P => P.Value.Errors)
 												   .Select(E => E.ErrorMessage)
 												   .ToList();
-					var response = new ApiValidationErrorResponse() { Errors = errors};
+					var response = new ApiValidationErrorResponse() { Errors = errors };
 
 					return new BadRequestObjectResult(response);
 				};
@@ -57,7 +58,7 @@ namespace Talabat.APIs
 			var services = scope.ServiceProvider;
 
 			var _dbContext = services.GetRequiredService<StoreContext>(); // ask clr for creating object from DbContext Explicitly
-		
+
 			var loggerFactory = services.GetRequiredService<ILoggerFactory>();
 
 			try
@@ -68,11 +69,13 @@ namespace Talabat.APIs
 			catch (Exception ex)
 			{
 				var logger = loggerFactory.CreateLogger<Program>();
-				logger.LogError(ex , "an error has been occured during apply the migration");
+				logger.LogError(ex, "an error has been occured during apply the migration");
 			}
 
 			#region Configure Kestrel Middlwares
-			
+
+			app.UseMiddleware<ExceptionMiddleware>();
+
 			// Configure the HTTP request pipeline.
 			if (app.Environment.IsDevelopment())
 			{
