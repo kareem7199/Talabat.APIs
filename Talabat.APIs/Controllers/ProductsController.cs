@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Talabat.APIs.Dtos;
 using Talabat.APIs.Errors;
+using Talabat.APIs.Helpers;
 using Talabat.Core.Entities;
 using Talabat.Core.Repositories.Contract;
 using Talabat.Core.Specifications;
@@ -30,17 +31,23 @@ namespace Talabat.APIs.Controllers
 		}
 
 		[HttpGet]
-		public async Task<ActionResult<IReadOnlyList<ProductToReturnDto>>> GetProducts([FromQuery]ProductSpecParams specParams)
+		public async Task<ActionResult<Pagination<ProductToReturnDto>>> GetProducts([FromQuery] ProductSpecParams specParams)
 		{
 
 			var spec = new ProductWithBrandAndCategorySpecifications(specParams);
 
 			var products = await _productsRepo.GetAllWithSpecAsync(spec);
 
-			return Ok(_mapper.Map<IReadOnlyList<Product>, IReadOnlyList<ProductToReturnDto>>(products));
+			var data = _mapper.Map<IReadOnlyList<Product>, IReadOnlyList<ProductToReturnDto>>(products);
+
+			var countSpec = new ProductsWithFilterationForCountSpecifications(specParams);
+
+			var count = await _productsRepo.GetCountAsync(countSpec);
+
+			return Ok(new Pagination<ProductToReturnDto>(specParams.PageIndex, specParams.PageSize, count, data));
 		}
 
-		[ProducesResponseType(typeof(ProductToReturnDto) , StatusCodes.Status200OK)]
+		[ProducesResponseType(typeof(ProductToReturnDto), StatusCodes.Status200OK)]
 		[ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
 		[HttpGet("{id}")]
 		public async Task<ActionResult<ProductToReturnDto>> GetProduct(int id)
@@ -51,14 +58,14 @@ namespace Talabat.APIs.Controllers
 			if (product is null)
 				return NotFound(new ApiResponse(404)); // 404
 
-			return Ok(_mapper.Map<Product,ProductToReturnDto>(product)); // 200
+			return Ok(_mapper.Map<Product, ProductToReturnDto>(product)); // 200
 		}
 
 		[HttpGet("brands")]
 		public async Task<ActionResult<IReadOnlyList<ProductBrand>>> GetBrands()
 		{
 			var brands = await _brandsRepo.GetAllAsync();
-			
+
 			return Ok(brands);
 		}
 
@@ -66,7 +73,7 @@ namespace Talabat.APIs.Controllers
 		public async Task<ActionResult<IReadOnlyList<ProductCategory>>> GetCategories()
 		{
 			var categories = await _categoriesRepo.GetAllAsync();
-			
+
 			return Ok(categories);
 		}
 	}
