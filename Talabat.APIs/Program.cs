@@ -1,4 +1,5 @@
 
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
@@ -6,6 +7,7 @@ using Talabat.APIs.Errors;
 using Talabat.APIs.Extensions;
 using Talabat.APIs.Helpers;
 using Talabat.APIs.Middlewares;
+using Talabat.Core.Identity;
 using Talabat.Core.Repositories.Contract;
 using Talabat.Repository;
 using Talabat.Repository.Data;
@@ -48,6 +50,8 @@ namespace Talabat.APIs
 				return ConnectionMultiplexer.Connect(connection);
 			});
 
+			builder.Services.AddIdentity<ApplicationUser , IdentityRole>()
+				.AddEntityFrameworkStores<ApplicationIdentityDbContext>();
 
 			#endregion
 
@@ -56,6 +60,7 @@ namespace Talabat.APIs
 			using var scope = app.Services.CreateScope();
 
 			var services = scope.ServiceProvider;
+
 
 			var _dbContext = services.GetRequiredService<StoreContext>(); // ask clr for creating object from DbContext Explicitly
 			var _identityDbContext = services.GetRequiredService<ApplicationIdentityDbContext>();
@@ -68,6 +73,9 @@ namespace Talabat.APIs
 				await StoreContextSeed.SeedAsync(_dbContext);
 
 				await _identityDbContext.Database.MigrateAsync();
+
+				var _userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+				await ApplicationIdentityDbContextSeed.SeedUsersAsync(_userManager);
 			}
 			catch (Exception ex)
 			{
