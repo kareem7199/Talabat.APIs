@@ -9,6 +9,7 @@ using Talabat.APIs.Middlewares;
 using Talabat.Core.Repositories.Contract;
 using Talabat.Repository;
 using Talabat.Repository.Data;
+using Talabat.Repository.Identity;
 
 namespace Talabat.APIs
 {
@@ -27,9 +28,16 @@ namespace Talabat.APIs
 
 			builder.Services.AddSwaggerServices();
 
+			builder.Services.AddApplicationServices();
+
 			builder.Services.AddDbContext<StoreContext>(options =>
 			{
 				options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+			});
+
+			builder.Services.AddDbContext<ApplicationIdentityDbContext>(options =>
+			{
+				options.UseSqlServer(builder.Configuration.GetConnectionString("IdentityConnection"));
 			});
 
 			builder.Services.AddApplicationServices();
@@ -40,6 +48,7 @@ namespace Talabat.APIs
 				return ConnectionMultiplexer.Connect(connection);
 			});
 
+
 			#endregion
 
 			var app = builder.Build();
@@ -49,6 +58,7 @@ namespace Talabat.APIs
 			var services = scope.ServiceProvider;
 
 			var _dbContext = services.GetRequiredService<StoreContext>(); // ask clr for creating object from DbContext Explicitly
+			var _identityDbContext = services.GetRequiredService<ApplicationIdentityDbContext>();
 
 			var loggerFactory = services.GetRequiredService<ILoggerFactory>();
 
@@ -56,6 +66,8 @@ namespace Talabat.APIs
 			{
 				await _dbContext.Database.MigrateAsync();
 				await StoreContextSeed.SeedAsync(_dbContext);
+
+				await _identityDbContext.Database.MigrateAsync();
 			}
 			catch (Exception ex)
 			{
