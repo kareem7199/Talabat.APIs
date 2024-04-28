@@ -9,9 +9,11 @@ using Talabat.APIs.Helpers;
 using Talabat.APIs.Middlewares;
 using Talabat.Core.Identity;
 using Talabat.Core.Repositories.Contract;
+using Talabat.Core.Services.Contract;
 using Talabat.Repository;
 using Talabat.Repository.Data;
 using Talabat.Repository.Identity;
+using Talabat.Service.AuthService;
 
 namespace Talabat.APIs
 {
@@ -41,6 +43,8 @@ namespace Talabat.APIs
 			{
 				options.UseSqlServer(builder.Configuration.GetConnectionString("IdentityConnection"));
 			});
+
+			builder.Services.AddScoped(typeof(IAuthService), typeof(AuthService));
 
 			builder.Services.AddApplicationServices();
 
