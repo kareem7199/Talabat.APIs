@@ -1,7 +1,10 @@
 
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
 using Talabat.APIs.Errors;
 using Talabat.APIs.Extensions;
@@ -44,8 +47,6 @@ namespace Talabat.APIs
 				options.UseSqlServer(builder.Configuration.GetConnectionString("IdentityConnection"));
 			});
 
-			builder.Services.AddScoped(typeof(IAuthService), typeof(AuthService));
-
 			builder.Services.AddApplicationServices();
 
 			builder.Services.AddSingleton<IConnectionMultiplexer>((serviceProvides) =>
@@ -54,8 +55,10 @@ namespace Talabat.APIs
 				return ConnectionMultiplexer.Connect(connection);
 			});
 
-			builder.Services.AddIdentity<ApplicationUser , IdentityRole>()
+			builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
 				.AddEntityFrameworkStores<ApplicationIdentityDbContext>();
+
+			builder.Services.AddAuthServices(builder.Configuration);
 
 			#endregion
 
