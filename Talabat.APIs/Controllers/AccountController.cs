@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Talabat.APIs.Dtos;
@@ -15,7 +17,7 @@ namespace Talabat.APIs.Controllers
 		private readonly IAuthService _authService;
 
 		public AccountController(
-			UserManager<ApplicationUser> userManager, 
+			UserManager<ApplicationUser> userManager,
 			SignInManager<ApplicationUser> signInManager,
 			IAuthService authService)
 		{
@@ -41,7 +43,7 @@ namespace Talabat.APIs.Controllers
 			{
 				DisplayName = user.DisplayName,
 				Email = user.Email,
-				Token = await _authService.CreateTokenAsync(user , _userManager)
+				Token = await _authService.CreateTokenAsync(user, _userManager)
 			});
 
 		}
@@ -70,5 +72,20 @@ namespace Talabat.APIs.Controllers
 			});
 		}
 
+		[Authorize]
+		[HttpGet]
+		public async Task<ActionResult<UserDto>> GetCurrentUser()
+		{
+			var email = User.FindFirstValue(ClaimTypes.Email);
+
+			var user = await _userManager.FindByEmailAsync(email);
+
+			return Ok(new UserDto()
+			{
+				DisplayName = user?.DisplayName ?? string.Empty ,
+				Email = user?.Email ?? string.Empty,
+				Token = await _authService.CreateTokenAsync(user , _userManager)
+			});
+		}
 	}
 }
