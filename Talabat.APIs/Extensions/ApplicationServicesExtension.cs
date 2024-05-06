@@ -9,6 +9,7 @@ using Talabat.Core.Repositories.Contract;
 using Talabat.Repository;
 using Talabat.Core.Services.Contract;
 using Talabat.Service.AuthService;
+using Talabat.Core;
 
 namespace Talabat.APIs.Extensions
 {
@@ -17,13 +18,14 @@ namespace Talabat.APIs.Extensions
 		public static IServiceCollection AddApplicationServices(this IServiceCollection services)
 		{
 
-			services.AddScoped<IBasketRepository , BasketRepository>();
+			services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-			services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+			services.AddScoped<IBasketRepository, BasketRepository>();
+
 			services.AddAutoMapper(typeof(MappingProfile));
-			
+
 			services.AddScoped<ExceptionMiddleware>();
-		
+
 			services.Configure<ApiBehaviorOptions>(options =>
 			{
 				options.InvalidModelStateResponseFactory = (actionContext) =>
@@ -43,7 +45,7 @@ namespace Talabat.APIs.Extensions
 			return services;
 		}
 
-		public static IServiceCollection AddAuthServices(this IServiceCollection services , IConfiguration configuration)
+		public static IServiceCollection AddAuthServices(this IServiceCollection services, IConfiguration configuration)
 		{
 
 			services.AddAuthentication(options =>
