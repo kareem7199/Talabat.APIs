@@ -1,14 +1,23 @@
 
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using StackExchange.Redis;
 using Talabat.APIs.Errors;
 using Talabat.APIs.Extensions;
 using Talabat.APIs.Helpers;
 using Talabat.APIs.Middlewares;
+using Talabat.Core.Identity;
 using Talabat.Core.Repositories.Contract;
+using Talabat.Core.Services.Contract;
 using Talabat.Repository;
 using Talabat.Repository.Data;
+using Talabat.Repository.Identity;
+using Talabat.Service.AuthService;
 
 namespace Talabat.APIs
 {
@@ -22,14 +31,24 @@ namespace Talabat.APIs
 
 			#region Configure Services
 
-			builder.Services.AddControllers();
+			builder.Services.AddControllers().AddNewtonsoftJson(options =>
+			{
+				options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+			});
 			// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 
 			builder.Services.AddSwaggerServices();
 
+			builder.Services.AddApplicationServices();
+
 			builder.Services.AddDbContext<StoreContext>(options =>
 			{
 				options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+			});
+
+			builder.Services.AddDbContext<ApplicationIdentityDbContext>(options =>
+			{
+				options.UseSqlServer(builder.Configuration.GetConnectionString("IdentityConnection"));
 			});
 
 			builder.Services.AddApplicationServices();
@@ -40,6 +59,11 @@ namespace Talabat.APIs
 				return ConnectionMultiplexer.Connect(connection);
 			});
 
+			builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+				.AddEntityFrameworkStores<ApplicationIdentityDbContext>();
+
+			builder.Services.AddAuthServices(builder.Configuration);
+
 			#endregion
 
 			var app = builder.Build();
@@ -48,7 +72,9 @@ namespace Talabat.APIs
 
 			var services = scope.ServiceProvider;
 
+
 			var _dbContext = services.GetRequiredService<StoreContext>(); // ask clr for creating object from DbContext Explicitly
+			var _identityDbContext = services.GetRequiredService<ApplicationIdentityDbContext>();
 
 			var loggerFactory = services.GetRequiredService<ILoggerFactory>();
 
@@ -56,6 +82,11 @@ namespace Talabat.APIs
 			{
 				await _dbContext.Database.MigrateAsync();
 				await StoreContextSeed.SeedAsync(_dbContext);
+
+				await _identityDbContext.Database.MigrateAsync();
+
+				var _userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+				await ApplicationIdentityDbContextSeed.SeedUsersAsync(_userManager);
 			}
 			catch (Exception ex)
 			{

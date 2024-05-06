@@ -16,6 +16,9 @@
 
   <ItemGroup>
     <Folder Include="Data\DataSeed\" />
+    <Folder Include="Identity\Config\" />
+    <Folder Include="Identity\DataSeed\" />
+    <Folder Include="Identity\Migrations\" />
   </ItemGroup>
 
 </Project>
