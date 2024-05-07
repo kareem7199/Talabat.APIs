@@ -11,6 +11,7 @@ using Talabat.Core.Services.Contract;
 using Talabat.Service.AuthService;
 using Talabat.Core;
 using Talabat.Service.OrderService;
+using Talabat.Service.ProductService;
 
 namespace Talabat.APIs.Extensions
 {
@@ -18,6 +19,8 @@ namespace Talabat.APIs.Extensions
 	{
 		public static IServiceCollection AddApplicationServices(this IServiceCollection services)
 		{
+
+			services.AddScoped<IProductService, ProductService>();
 
 			services.AddScoped<IOrderService, OrderService>();
 
