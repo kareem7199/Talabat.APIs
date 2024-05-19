@@ -59,9 +59,6 @@ namespace Talabat.APIs
 				return ConnectionMultiplexer.Connect(connection);
 			});
 
-			builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-				.AddEntityFrameworkStores<ApplicationIdentityDbContext>();
-
 			builder.Services.AddAuthServices(builder.Configuration);
 
 			#endregion
