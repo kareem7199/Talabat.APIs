@@ -27,7 +27,7 @@ namespace Talabat.APIs.Controllers
 		}
 
 		[HttpGet]
-		[Authorize()]
+		//[Authorize()]
 		public async Task<ActionResult<Pagination<ProductToReturnDto>>> GetProducts([FromQuery] ProductSpecParams specParams)
 		{
 			var products = await _productService.GetProductsAsync(specParams);
