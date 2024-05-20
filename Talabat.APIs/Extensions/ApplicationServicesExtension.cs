@@ -12,6 +12,10 @@ using Talabat.Service.AuthService;
 using Talabat.Core;
 using Talabat.Service.OrderService;
 using Talabat.Service.ProductService;
+using Microsoft.AspNetCore.Identity;
+using Talabat.Core.Identity;
+using Talabat.Repository.Identity;
+using Talabat.Service.PaymentService;
 
 namespace Talabat.APIs.Extensions
 {
@@ -19,6 +23,8 @@ namespace Talabat.APIs.Extensions
 	{
 		public static IServiceCollection AddApplicationServices(this IServiceCollection services)
 		{
+
+			services.AddScoped(typeof(IPaymentService) , typeof(PaymentService));
 
 			services.AddScoped<IProductService, ProductService>();
 
@@ -53,6 +59,9 @@ namespace Talabat.APIs.Extensions
 
 		public static IServiceCollection AddAuthServices(this IServiceCollection services, IConfiguration configuration)
 		{
+
+			services.AddIdentity<ApplicationUser, IdentityRole>()
+					.AddEntityFrameworkStores<ApplicationIdentityDbContext>();
 
 			services.AddAuthentication(options =>
 			{

@@ -4,12 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Stripe;
 using Talabat.Core;
 using Talabat.Core.Entities;
 using Talabat.Core.Entities.Order_Aggregate;
 using Talabat.Core.Repositories.Contract;
 using Talabat.Core.Services.Contract;
 using Talabat.Core.Specifications.Order_Specs;
+using Address = Talabat.Core.Entities.Order_Aggregate.Address;
+using Product = Talabat.Core.Entities.Product;
 
 namespace Talabat.Service.OrderService
 {
@@ -17,13 +20,16 @@ namespace Talabat.Service.OrderService
 	{
 		private readonly IBasketRepository _basketRepo;
 		private readonly IUnitOfWork _unitOfWork;
+		private readonly IPaymentService _paymentService;
 
 		public OrderService(
 			IBasketRepository basketRepo,
-			IUnitOfWork unitOfWork)
+			IUnitOfWork unitOfWork ,
+			IPaymentService paymentService)
 		{
 			_basketRepo = basketRepo;
 			_unitOfWork = unitOfWork;
+			_paymentService = paymentService;
 		}
 
 		public async Task<Order?> CreateOrderAsync(string basketId, int deliveryMethodId, Address shippingAddress, string buyerEmail)
@@ -59,6 +65,18 @@ namespace Talabat.Service.OrderService
 
 			var deliveryMethod = await _unitOfWork.Repository<DeliveryMethod>().GetAsync(deliveryMethodId);
 
+			var orderRepo = _unitOfWork.Repository<Order>();
+
+			var spec = new OrderWithPaymentIntentSpecification(basket.PaymentIntentId);
+
+			var exsistingOrder = await orderRepo.GetWithSpecAsync(spec);
+
+			if (exsistingOrder is not null)
+			{
+				orderRepo.Delete(exsistingOrder);
+				await _paymentService.CreateOrUpdatePaymentIntent(basketId);
+			}
+			
 			// 5. Create Order
 
 			var order = new Order(
@@ -66,10 +84,11 @@ namespace Talabat.Service.OrderService
 					shippingAddress: shippingAddress,
 					deliveryMethodId: deliveryMethodId,
 					items: orderItems,
-					subTotal: subTotal
+					subTotal: subTotal,
+					paymentIntentId: basket?.PaymentIntentId ?? ""
 				);
 
-			_unitOfWork.Repository<Order>().Add(order);
+			orderRepo.Add(order);
 
 			// 6. Save To Database [TODO]
 

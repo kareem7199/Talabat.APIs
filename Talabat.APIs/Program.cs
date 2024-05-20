@@ -59,10 +59,15 @@ namespace Talabat.APIs
 				return ConnectionMultiplexer.Connect(connection);
 			});
 
-			builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-				.AddEntityFrameworkStores<ApplicationIdentityDbContext>();
-
 			builder.Services.AddAuthServices(builder.Configuration);
+
+			builder.Services.AddCors(options =>
+			{
+				options.AddPolicy("MyPolicy", policyOptions =>
+				{
+					policyOptions.AllowAnyHeader().AllowAnyMethod().WithOrigins(builder.Configuration["FrontBaseUrl"]);
+				});
+			});
 
 			#endregion
 
@@ -109,6 +114,8 @@ namespace Talabat.APIs
 			app.UseHttpsRedirection();
 
 			app.UseStaticFiles();
+
+			app.UseCors("MyPolicy");
 
 			app.MapControllers();
 
