@@ -26,7 +26,7 @@ namespace Talabat.APIs.Controllers
 			_mapper = mapper;
 		}
 
-		[Cashed]
+		[Cashed(600)]
 		[HttpGet]
 		public async Task<ActionResult<Pagination<ProductToReturnDto>>> GetProducts([FromQuery] ProductSpecParams specParams)
 		{
