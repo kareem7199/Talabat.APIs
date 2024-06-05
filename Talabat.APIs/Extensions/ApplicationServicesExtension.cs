@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Identity;
 using Talabat.Core.Identity;
 using Talabat.Repository.Identity;
 using Talabat.Service.PaymentService;
+using Talabat.Service.CasheService;
 
 namespace Talabat.APIs.Extensions
 {
@@ -24,7 +25,9 @@ namespace Talabat.APIs.Extensions
 		public static IServiceCollection AddApplicationServices(this IServiceCollection services)
 		{
 
-			services.AddScoped(typeof(IPaymentService) , typeof(PaymentService));
+			services.AddSingleton(typeof(IResponseCashService), typeof(ResponseCasheService));
+
+			services.AddScoped(typeof(IPaymentService), typeof(PaymentService));
 
 			services.AddScoped<IProductService, ProductService>();
 
